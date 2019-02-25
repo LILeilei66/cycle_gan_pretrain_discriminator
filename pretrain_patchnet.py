@@ -13,7 +13,9 @@ from options.train_options import TrainOptions
 from options.test_options import TestOptions
 from data.discriminator_dataset import horseDataset
 from torch.utils.data import DataLoader
-
+import sys
+import os
+from util.visualizer import Visualizer
 class Option():
     pass
 
@@ -63,4 +65,11 @@ if __name__ == '__main__':
     model = DiscriminateModel(opt)
     model.setup(opt)
 
+    # item = dataset.__getitem__(0)
+    # print(item['image'].shape)
+    # print(model.netD(dataset.__getitem__(0)['image']))
 
+    visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
+    total_iters = 0                # the total number of training iterations
+
+    # TODO: 准备训练

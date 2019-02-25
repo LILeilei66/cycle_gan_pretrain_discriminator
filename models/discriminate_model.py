@@ -71,6 +71,7 @@ class DiscriminateModel(BaseModel):
         # TODO
         # Real
         pred_real = netD(real)
+        print(pred_real)
         pred_fake = netD(fake)
         loss_D_real = self.criterion()
         # TODO: Loss definition

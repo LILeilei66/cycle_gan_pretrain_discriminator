@@ -11,6 +11,12 @@ IMG_EXTENSIONS = [
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
 ]
 
+TRANSFORM = transforms.Compose(
+    [transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5),
+                         (0.5, 0.5, 0.5))
+    ])
+
 def is_image_file(fname):
     return any(fname.endswith(extension) for extension in IMG_EXTENSIONS)
 
@@ -29,7 +35,7 @@ class horseDataset(Dataset):
     Fake Image -> label = 1
     Real Image -> label = 0
     """
-    def __init__(self, real_dir, fake_dir, transform=None):
+    def __init__(self, real_dir, fake_dir, transform=TRANSFORM):
         """
 
         :param path_real: Path to the real imgs, e.g.: './dataset/horse/real'
@@ -50,19 +56,16 @@ class horseDataset(Dataset):
 
     def __getitem__(self, index):
         if index >= self.nbr_real: # get fake image
-            img_name = self.fake_img_list[index]
+            path_img = self.fake_img_list[index]
             label = 1
         else: # get real image
-            img_name = self.real_img_list[index]
+            path_img = self.real_img_list[index]
             label = 0
 
-        path_img = os.path.join(self.real_dir, img_name)
         img = mpimg.imread(path_img)
+        img = self.transform(img)
 
         sample = {'image': img, 'label': label}
-
-        if self.transform:
-            sample = self.transform(sample)
 
         return sample
 
