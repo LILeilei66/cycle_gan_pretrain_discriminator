@@ -4,8 +4,6 @@ from torchvision import transforms, utils
 import os
 import matplotlib.image as mpimg
 
-# TODO: PatchNet 的 preprocessing 情况
-
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
@@ -32,8 +30,8 @@ def make_dataset(dir, img_list=[]):
 
 class horseDataset(Dataset):
     """
-    Fake Image -> label = 1
-    Real Image -> label = 0
+    Fake Image -> label = 0, False
+    Real Image -> label = 1, True
     """
     def __init__(self, real_dir, fake_dir, transform=TRANSFORM):
         """
@@ -57,15 +55,14 @@ class horseDataset(Dataset):
     def __getitem__(self, index):
         if index >= self.nbr_real: # get fake image
             path_img = self.fake_img_list[index-self.nbr_real]
-            label = 1
+            label = torch.tensor([0], dtype=torch.uint8)
         else: # get real image
             path_img = self.real_img_list[index]
-            label = 0
+            label = torch.tensor([1], dtype=torch.uint8)
 
         img = mpimg.imread(path_img)
         img = self.transform(img)
 
         sample = {'image': img, 'label': label}
-
         return sample
 
