@@ -16,6 +16,10 @@ from torch.utils.data import DataLoader
 import sys
 import os
 from util.visualizer import Visualizer
+from models.networks import GANLoss
+from torch import optim
+import time
+
 class Option():
     pass
 
@@ -39,7 +43,7 @@ if __name__ == '__main__':
     option_dict = {
         'isTrain': True,
         # BaseModel.__init__()
-        'gpu_ids': 0,
+        'gpu_ids': [0],
         'checkpoints_dir': './checkpoints',
         'name': 'experiment1',
         'preprocess': None,
@@ -57,7 +61,15 @@ if __name__ == '__main__':
         'norm': 'instance',
         'init_type': 'normal',
         'init_gain': 0.02,
-        'gan_mode': 'lsgan'
+        'gan_mode': 'lsgan',
+        'display_id': -1,
+        'no_html': True,
+        'display_winsize': 256,
+        'display_port': 8097,
+        # Display
+        'print_freq': 5,
+        # else
+        'batch_size': 128
         }
     for key in option_dict.keys():
         setattr(opt, key, option_dict[key])
@@ -70,6 +82,27 @@ if __name__ == '__main__':
     # print(model.netD(dataset.__getitem__(0)['image']))
 
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
-    total_iters = 0                # the total number of training iterations
+    # criterion = GANLoss('lsgan')
+    # optimizer = optim.RMSprop(model.parameters())
 
+
+    total_iters = 0                # the total number of training iterations
     # TODO: 准备训练
+    for epoch in range(20):
+        running_loss = 0.0
+        iter_data_time = time.time()
+        epoch_iter = 0
+        for i, data in enumerate(dataloader):
+            iter_start_time = time.time()
+            if total_iters % opt.print_freq == 0:
+                t_data = iter_start_time - iter_data_time
+            total_iters += opt.batch_size
+            epoch_iter += opt.batch_size
+            visualizer.reset()
+            model.set_input(data)       # unpack data from dataset and apply preprocessing
+            model.optimize_parameters() # calculate loss functions, get gradients, update network weights
+
+            if total_iters % opt.print_freq == 0: # print training losses and save logging information to the disk
+                losses = model.get_current_losses()
+                t_comp = (time.time() - iter_start_time) / opt.batch_size
+                visualizer.print_current_losses(epoch, epoch_iter, losses, t_comp, t_data)

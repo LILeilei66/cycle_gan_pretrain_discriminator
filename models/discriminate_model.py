@@ -1,9 +1,17 @@
 from .base_model import BaseModel
 from . import networks
+from torch import optim
+import itertools
 
 class DiscriminateModel(BaseModel):
     """
     This DescriminateModel can be used to classify inputs into two categories.
+    attributions:
+        netD:           本类不包含Generators.
+        criterion:      使用LossGAN, 根本上来说是MSELoss.
+        loss_names：     'D', 对于discriminator training 只需要loss_D.
+        visual_names:
+        model_names:
     """
 
     @staticmethod
@@ -18,14 +26,13 @@ class DiscriminateModel(BaseModel):
         """Initialize the DescriminateModel class.
 
         Parameters:
-            opt (Option class)-- stores all the experiment flags; needs to be a subclass of
-            BaseOptions
+            opt:        存储所有需要的参量, 可由外部构建, 无需继承BaseOptions()
         """
         assert(opt.isTrain) # 若 isTrain, 则必须loadNet
         BaseModel.__init__(self, opt)  # specify the training losses you want to print out. The
 
         # training/test scripts will call <BaseModel.get_current_losses>
-        self.loss_names = ['D_A', 'G_A', 'cycle_A', 'idt_A', 'D_B', 'G_B', 'cycle_B', 'idt_B']
+        self.loss_names = ['D'] # 只需要 loss_D
         # specify the images you want to save/display. The training/test scripts  will call
         # <BaseModel.get_current_visuals>
         self.visual_names = []
@@ -39,18 +46,15 @@ class DiscriminateModel(BaseModel):
         # please see <BaseModel.load_networks>
         setattr(self, 'netD' + opt.model_suffix, self.netD)  # store netG in self.
 
+        self.optimizer_D = optim.Adam()
         self.criterion = networks.GANLoss(opt.gan_mode).to(self.device)
 
     def set_input(self, input):
-        """Unpack input data from the dataloader and perform necessary pre-processing steps.
-
-        Parameters:
-            input: a dictionary that contains the data itself and its metadata information.
-
-        We need to use 'single_dataset' dataset mode. It only load images from one domain.
         """
-        self.real_A = input['A'].to(self.device)
-        self.image_paths = input['A_paths']
+        Parameters:
+            input:      {'image': ndarray type, 'label': 0 或 1}.
+        """
+        self.real_A = input['image'].to(self.device)
         print(self.real_A.shape)
 
     def forward(self):
@@ -77,8 +81,24 @@ class DiscriminateModel(BaseModel):
         # TODO: Loss definition
         pass
 
-
+    def backward_D_A(self):
+        pass
 
     def optimize_parameters(self):
-        """No optimization for discriminator model."""
+        """Calculate loss functions, get gradients, update network weights."""
         pass
+        # forward
+        self.forward()      # 得到预测结果.
+        self.set_requires_grad(self.netD, True) # 将待优化的 netD 设为 requires_grad
+        self.optim
+        # G_A and G_B
+        self.set_requires_grad([self.netD_A, self.netD_B], False)  # Ds require no gradients when optimizing Gs
+        self.optimizer_G.zero_grad()  # set G_A and G_B's gradients to zero
+        self.backward_G()             # calculate gradients for G_A and G_B
+        self.optimizer_G.step()       # update G_A and G_B's weights
+        # D_A and D_B
+        self.set_requires_grad([self.netD_A, self.netD_B], True)
+        self.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
+        self.backward_D_A()      # calculate gradients for D_A
+        self.backward_D_B()      # calculate graidents for D_B
+        self.optimizer_D.step()  # update D_A and D_B's weights

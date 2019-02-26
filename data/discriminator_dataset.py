@@ -56,7 +56,7 @@ class horseDataset(Dataset):
 
     def __getitem__(self, index):
         if index >= self.nbr_real: # get fake image
-            path_img = self.fake_img_list[index]
+            path_img = self.fake_img_list[index-self.nbr_real]
             label = 1
         else: # get real image
             path_img = self.real_img_list[index]
