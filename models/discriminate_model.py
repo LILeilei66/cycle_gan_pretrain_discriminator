@@ -2,7 +2,7 @@ from .base_model import BaseModel
 from . import networks
 from torch import optim
 import itertools
-
+from torch import load as tload
 
 class DiscriminateModel(BaseModel):
     """
@@ -30,7 +30,6 @@ class DiscriminateModel(BaseModel):
         Parameters:
             opt:        存储所有需要的参量, 可由外部构建, 无需继承BaseOptions()
         """
-        assert(opt.isTrain)
         BaseModel.__init__(self, opt)  # specify the training losses you want to print out. The
         self.optimizers = []
 
@@ -58,6 +57,47 @@ class DiscriminateModel(BaseModel):
         """
         self.img = input['image'].to(self.device)
         self.label = input['label']
+
+    def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
+        """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
+        key = keys[i]
+
+        if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer
+            if module.__class__.__name__.startswith('InstanceNorm') and \
+                    (key == 'running_mean' or key == 'running_var'):
+                if getattr(module, key) is None:
+                    state_dict.pop('.'.join(keys))
+            if module.__class__.__name__.startswith('InstanceNorm') and \
+               (key == 'num_batches_tracked'):
+                state_dict.pop('.'.join(keys))
+        else:
+            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+
+    def  load_net(self, path):
+        """
+        Difference with self.load_networks():
+        ------------------------------------
+            1. discriminate_model 只含有一个 model, 因此，无需遍历 model_name;
+            2. load_filename, 由 path 传入, 无需利用 epoch 和 name 进行 path.join;
+            3. 不是很能理解 __patch_instance_norm_state_dict 在干什么.
+        :param path: (str) path of the .pth state_dict file
+        """
+        net = self.netD
+
+        k, v = self.netD.named_parameters().__next__()
+        v_origin = v.detach().mean()
+
+        state_dict = tload(path, map_location=self.device)
+        if hasattr(state_dict, '_metadata'):
+            del state_dict._metadata
+
+        for i,key in enumerate(list(state_dict.keys())):
+            self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+        net.load_state_dict(state_dict)
+        k, v = self.netD.named_parameters().__next__()
+        v_loaded = v.detach().mean()
+        assert v_origin != v_loaded
+        print('load network from %s' % path)
 
     def forward(self):
         """Run forward pass."""

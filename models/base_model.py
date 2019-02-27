@@ -198,8 +198,6 @@ class BaseModel(ABC):
                 for i, key in enumerate(list(state_dict.keys())):  # need to copy keys here because
                 # we
                     # mutate in loop
-                    print('----{:}, {:}-----'.format(i, key))
-                    print(len(key.split('.')))
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 

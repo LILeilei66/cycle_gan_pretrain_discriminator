@@ -1,11 +1,9 @@
 """
 Pretrain discriminator:
 1. generate fake images (DONE)
-2. pretrain
+2. pretrain (DONE)
 """
 
-
-import time
 from data import create_dataset
 from models.discriminate_model import DiscriminateModel
 from options.train_options import TrainOptions
@@ -145,7 +143,6 @@ if __name__ == '__main__':
     # =============================================================================================
     # zebra real|fake discriminator
     # =============================================================================================
-    # TODO
 
     opt = Option()
     option_dict = {
