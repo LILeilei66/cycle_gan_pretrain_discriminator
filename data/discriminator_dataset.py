@@ -44,8 +44,8 @@ class horseDataset(Dataset):
         self.real_dir = real_dir
         self.fake_dir = fake_dir
         self.transform = transform
-        self.real_img_list = make_dataset(real_dir)
-        self.fake_img_list = make_dataset(fake_dir)
+        self.real_img_list = make_dataset(real_dir, [])
+        self.fake_img_list = make_dataset(fake_dir, [])
         self.nbr_real = len(self.real_img_list)
         self.nbr_fake = len(self.fake_img_list)
 
@@ -59,10 +59,13 @@ class horseDataset(Dataset):
         else: # get real image
             path_img = self.real_img_list[index]
             label = torch.tensor([1], dtype=torch.uint8)
-
-        img = mpimg.imread(path_img)
-        img = self.transform(img)
-
+        try:
+            img = mpimg.imread(path_img)
+            img = self.transform(img)
+        except ValueError:
+            message = 'index : {:}; img.shape : {:}; label : {:}; img.path : {:}'.format(\
+                    index, img.shape, label, path_img)
+            print(message)
         sample = {'image': img, 'label': label}
         return sample
 

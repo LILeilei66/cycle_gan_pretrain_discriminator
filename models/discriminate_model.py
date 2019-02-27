@@ -32,6 +32,8 @@ class DiscriminateModel(BaseModel):
         """
         assert(opt.isTrain)
         BaseModel.__init__(self, opt)  # specify the training losses you want to print out. The
+        self.optimizers = []
+
 
         self.loss_names = ['D'] # 只需要 loss_D
         self.model_names = ['D' + opt.model_suffix]
@@ -46,6 +48,7 @@ class DiscriminateModel(BaseModel):
 
         self.optimizer_D = optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1,
         0.999))
+        self.optimizers.append(self.optimizer_D)
         self.criterion_D = networks.DiscriminatorLoss(opt.gan_mode).to(self.device)
 
     def set_input(self, input):
@@ -73,7 +76,6 @@ class DiscriminateModel(BaseModel):
         We also call loss_D.backward() to calculate the gradients.
         """
         pred = netD(image)
-        print(label[0])
         loss_D = self.criterion_D(pred, label)
         loss_D.backward()
         return loss_D

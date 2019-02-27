@@ -225,3 +225,11 @@ class Visualizer():
         print(message)  # print the message
         with open(self.log_name, "a") as log_file:
             log_file.write('%s\n' % message)  # save the message
+
+    def print_avg_loss(self, epoch, epoch_loss):
+        message = 'Average loss at %d th epoch is %.3f' % (epoch, sum(epoch_loss)/len(epoch_loss))
+        print(message)
+        with open(self.log_name, "a") as log_file:
+            log_file.write('%s\n' % message)
+
+
