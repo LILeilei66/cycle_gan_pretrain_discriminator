@@ -3,6 +3,8 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms, utils
 import os
 import matplotlib.image as mpimg
+from numpy import zeros as npzeros
+from numpy import uint8 as npuint8
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -61,7 +63,15 @@ class horseDataset(Dataset):
             label = torch.tensor([1], dtype=torch.uint8)
         try:
             img = mpimg.imread(path_img)
-            img = self.transform(img)
+            assert img.shape[0] == 256
+            assert img.shape[1] == 256
+            if len(img.shape) == 2:
+                img_rgb = npzeros((256, 256, 3), dtype=npuint8)
+                for i in range(3):
+                    img_rgb[:,:,i] = img
+                img = self.transform(img_rgb)
+            else:
+                img = self.transform(img)
         except ValueError:
             message = 'index : {:}; img.shape : {:}; label : {:}; img.path : {:}'.format(\
                     index, img.shape, label, path_img)

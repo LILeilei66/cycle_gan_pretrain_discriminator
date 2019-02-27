@@ -31,6 +31,9 @@ NET_MESSAGE_TEMPLATE = \
 "---------- Networks initialized -------------\n \
 Model located at : {:}\n"
 
+SAVE_MESSAGE_TEMPLATE = \
+"Model save path : {:}\n"
+
 if __name__ == '__main__':
     path_real_horse = './dataset/horse/real'
     path_real_zebra = './dataset/zebra/real'
@@ -40,7 +43,7 @@ if __name__ == '__main__':
     # =============================================================================================
     # horse real|fake discriminator
     # =============================================================================================
-
+    """
     opt = Option()
     option_dict = {
         'isTrain': True,
@@ -138,17 +141,11 @@ if __name__ == '__main__':
         print('End of epoch %d / %d \t Time Taken: %d sec' % (
         epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
-
+    """
     # =============================================================================================
     # zebra real|fake discriminator
     # =============================================================================================
     # TODO
-
-    """
-    dataset = horseDataset(real_dir=path_real_zebra, fake_dir=path_fake_zebra)
-    dataset_size = len(dataset)
-    print('The number of training images = %d' % dataset_size)
-    dataloader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=0)
 
     opt = Option()
     option_dict = {
@@ -182,6 +179,7 @@ if __name__ == '__main__':
         # Train
         'lr': 0.002, # train_option 中 Adam_Optimizer 的初始 learning rate, Adam 中的 default 值为 1e-3.
         'beta1': 0.5, # train_option 中 Adam_Optimizer 的 momentum, Adam 中的 default 值为 0.9.
+        'epochs': 30,
         # else
         'batch_size': 128,
         'niter': 100,
@@ -192,20 +190,35 @@ if __name__ == '__main__':
     for key in option_dict.keys():
         setattr(opt, key, option_dict[key])
 
+    log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
+
+    save_message = SAVE_MESSAGE_TEMPLATE.format(os.path.join(opt.checkpoints_dir, opt.name))
+    print(save_message)
+
+    dataset = horseDataset(real_dir=path_real_zebra, fake_dir=path_fake_zebra)
+    dataset_size = len(dataset)
+
+    data_message = DATA_MESSAGE_TEMPLATE.format( \
+                    dataset.real_dir, len(dataset.real_img_list), \
+                    dataset.fake_dir, len(dataset.fake_img_list))
+    print(data_message)
+    print('The number of training images = %d' % dataset_size)
+
+    dataloader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=0)
+
     model = DiscriminateModel(opt)
-    model.setup(opt)
-
-    # item = dataset.__getitem__(0)
-    # print(item['image'].shape)
-    # print(model.netD(dataset.__getitem__(0)['image']))
-
+    net_message = NET_MESSAGE_TEMPLATE.format(model.device)
+    print(net_message)
+    model.setup(opt) # Load and print networks; create schedulers.
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
-    # criterion = GANLoss('lsgan')
-    # optimizer = optim.RMSprop(model.parameters())
 
+    with open(log_name, 'a') as log_file:
+        log_file.write(save_message)
+        log_file.write(data_message)
+        log_file.write(net_message)
 
     total_iters = 0                # the total number of training iterations
-    for epoch in range(25):
+    for epoch in range(opt.epochs):
         running_loss = 0.0
         epoch_start_time = time.time()
         iter_data_time = time.time()
@@ -231,8 +244,6 @@ if __name__ == '__main__':
         print('saving the model at the end of epoch %d as state_dict' % (epoch))
         model.save_networks(epoch)
 
-        print('Average loss at %d th epoch is %.3f' % (epoch, sum(epoch_loss)/len(epoch_loss)))
+        visualizer.print_avg_loss(epoch, epoch_loss)
         print('End of epoch %d / %d \t Time Taken: %d sec' % (
         epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
-        model.update_learning_rate()  # update learning rates at the end of every epoch.
-    """
