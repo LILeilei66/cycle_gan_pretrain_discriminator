@@ -307,7 +307,13 @@ class DiscriminatorLoss(nn.Module):
         Returns:
             A label tensor filled with ground truth label, and with the size of the input
         """
-        return target_is_real.expand_as(prediction)
+        assert len(target_is_real.shape) == 2
+        assert target_is_real.shape[1] == 1
+        target_expanded = prediction.clone()
+        batch_size, _, ft_shape, _ = prediction.shape
+        for i, data in enumerate(target_is_real[:, 0]):
+            target_expanded[i,0,:,:] = data.expand(ft_shape, ft_shape)
+        return target_expanded
 
     def __call__(self, prediction, target_is_real):
         """Calculate loss given Discriminator's output and ground truth labels.
@@ -319,11 +325,10 @@ class DiscriminatorLoss(nn.Module):
         Returns:
             the calculated loss.
         """
-        # TODO: GANLoss 中只能依次改变, 将其改为整体计算loss.
-        # TODO: 思考一下怎么 expand.
+
         if self.gan_mode in ['lsgan', 'vanilla']:
             target_tensor = self.get_target_tensor(prediction, target_is_real)
-            print(328, 'prediction: ', prediction.shape, ' ; target_tensor: ', target_tensor.shape)
+
             loss = self.loss(prediction, target_tensor)
         elif self.gan_mode == 'wgangp':
             if target_is_real:
