@@ -6,6 +6,7 @@ Test 2 pretrained discriminators.
 from data.discriminator_dataset import horseDataset
 from models.discriminate_model import DiscriminateModel
 from torch.utils.data import DataLoader
+from torch import unsqueeze as tunsqueeze
 import os
 
 class Option():
@@ -94,6 +95,14 @@ if __name__ == '__main__':
     dataset = horseDataset(path_real_horse, path_real_zebra)
     dataloader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=False)
 
+    dataset_size = len(dataset)
+
+    data_message = DATA_MESSAGE_TEMPLATE.format( \
+                    dataset.real_dir, len(dataset.real_img_list), \
+                    dataset.fake_dir, len(dataset.fake_img_list))
+    print(data_message)
+    print('The number of training images = %d' % dataset_size)
+
     # 3. Create and load models;
     model = DiscriminateModel(opt)
     model.load_net(path_discriminator_horse)
@@ -101,7 +110,32 @@ if __name__ == '__main__':
 
     # 4. Test;
     # TODO
+    """
+    1) 传入 1 batch 的 image; 
+    2) Compare NET result with labels.
     
+    当进行训练的时候, 是让最后的结果往 <0|1> 靠近的，所以直接拿 features.mean() 与 0.5 比较, 作为一个比较简单的
+    """
+
+    sample_real = dataset.__getitem__(0)
+    sample_real['image'] = tunsqueeze(sample_real['image'], 0) # 为 img 增加一个维度, 当前 shape 为 [1,3,256,256]
+    label = sample_real['label']
+
+    model.set_input(sample_real)
+    model.forward()
+    print(model.features.shape)
+    print(model.features.mean())
+
+    sample_fake = dataset.__getitem__(0)
+    sample_real['image'] = tunsqueeze(sample_real['image'], 0) # 为 img 增加一个维度, 当前 shape 为 [1,3,256,256]
+    label = sample_real['label']
+
+    model.set_input(sample_real)
+    model.forward()
+    print(model.features.shape)
+    print(model.features.mean())
+
+
 
 
 
