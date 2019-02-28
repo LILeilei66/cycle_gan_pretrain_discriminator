@@ -7,6 +7,11 @@ from . import util, html
 from subprocess import Popen, PIPE
 from scipy.misc import imresize
 
+CLF_MESSAGE_TEMPLATE = \
+"{:} : \n \
+TP = {:} ; TN = {:} ; FP = {:} ; FN = {:} \n \
+Accuracy = {:} ; Recall = {:} ; Precision = {:} \n "
+
 if sys.version_info[0] == 2:
     VisdomExceptionBase = Exception
 else:
@@ -89,6 +94,11 @@ class Visualizer():
         with open(self.log_name, "a") as log_file:
             now = time.strftime("%c")
             log_file.write('================ Training Loss (%s) ================\n' % now)
+
+        self.test_loss_name = os.path.join(opt.test_results_dir, opt.name, 'test_loss.txt')
+        with open(self.test_loss_name, "a") as test_loss_log:
+            now = time.strftime("%c")
+            log_file.write('================ Testing Loss (%s) ================\n' % now)
 
     def reset(self):
         """Reset the self.saved status"""
@@ -232,4 +242,26 @@ class Visualizer():
         with open(self.log_name, "a") as log_file:
             log_file.write('%s\n' % message)
 
+    def print_test_result(self, period, epoch, TP, TN, FP, FN):
+        """
+        将准确率, 精确率, 召回率存于 self.test_loss_name
+        :param period:  Training or Testing
+        :param epoch:   (int) 第几个训练周期
+        :param TP:      True Positive
+        :param TN:      True Negative
+        :param FP:      False Positive
+        :param FN:      False Negative
+        :return:
+        """
+        if TP * FP * TP * FN == 0:
+           P = 'Nan'
+           R = 'Nan'
+        else:
+            P = TP / (TP + FP)  # Precision 查准率
+            R = TP / (TP + FN)  # Recall 查全率
+        Acc = (TP + TN) / (TP + TN + FP + FN)
 
+        clf_message = CLF_MESSAGE_TEMPLATE.format(epoch, period, TP, TN, FP, FN, Acc, P, R)
+        print(clf_message)
+        with open(self.test_loss_name, 'a') as test_log_file:
+            test_log_file.write(clf_message)

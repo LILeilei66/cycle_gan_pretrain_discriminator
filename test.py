@@ -140,10 +140,7 @@ if __name__ == '__main__':
     
     当进行训练的时候, 是让最后的结果往 <0|1> 靠近的，所以直接拿 features.mean() 与 0.5 比较, 作为一个比较简单的
     """
-    TN = 0
-    TP = 0
-    FN = 0
-    FP = 0
+
 
     for i, data in enumerate(dataloader):
         model.set_input(data)

@@ -82,22 +82,24 @@ class DiscriminateModel(BaseModel):
             3. 不是很能理解 __patch_instance_norm_state_dict 在干什么.
         :param path: (str) path of the .pth state_dict file
         """
-        net = self.netD
+        if path is None:
+            pass
+        else:
+            net = self.netD
 
-        k, v = self.netD.named_parameters().__next__()
-        v_origin = v.detach().mean()
+            k, v = self.netD.named_parameters().__next__()
+            v_origin = v.detach().mean()
 
-        state_dict = tload(path, map_location=self.device)
-        if hasattr(state_dict, '_metadata'):
-            del state_dict._metadata
+            state_dict = tload(path, map_location=self.device)
+            if hasattr(state_dict, '_metadata'):
+                del state_dict._metadata
 
-        for i,key in enumerate(list(state_dict.keys())):
-            self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-        net.load_state_dict(state_dict)
-        k, v = self.netD.named_parameters().__next__()
-        v_loaded = v.detach().mean()
-        assert v_origin != v_loaded
-        print('load network from %s' % path)
+            for i,key in enumerate(list(state_dict.keys())):
+                self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+            net.load_state_dict(state_dict)
+            k, v = self.netD.named_parameters().__next__()
+            v_loaded = v.detach().mean()
+            assert v_origin != v_loaded
 
     def forward(self):
         """Run forward pass."""

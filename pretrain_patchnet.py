@@ -23,24 +23,47 @@ class Option():
 DATA_MESSAGE_TEMPLATE = \
 "---------- Dataset initialized -------------\n \
 at {:}, file list length: {:}\n \
-at {:}, file list length: {:}\n"
+at {:}, file list length: {:}\n \n \
+The number of training images = {:}"
 
 NET_MESSAGE_TEMPLATE = \
 "---------- Networks initialized -------------\n \
-Model located at : {:}\n"
+Model located at : {:}\n \
+Model loaded from : {:}\n"
 
 SAVE_MESSAGE_TEMPLATE = \
 "Model save path : {:}\n"
 
 if __name__ == '__main__':
-    path_real_horse = './dataset/horse/real'
-    path_real_zebra = './dataset/zebra/real'
-    path_fake_horse = './dataset/horse/fake'
-    path_fake_zebra = './dataset/zebra/fake'
+    # TODO: 虽然loss在LossGAN在减小, 但是对于<Real|Fake>的分类效果完全没有变好。
+
+    path_train_real_horse = './dataset/horse/train/real'
+    path_train_fake_horse = './dataset/horse/train/fake'
+    path_test_real_horse =  './dataset/horse/test/real'
+    path_test_fake_horse =  './dataset/horse/test/fake'
+
+    path_train_real_zebra = './dataset/zebra/train/real'
+    path_train_fake_zebra = './dataset/zebra/train/fake'
+    path_test_real_zebra = './dataset/zebra/test/real'
+    path_test_fake_zebra = './dataset/zebra/test/fake'
+
+    path_discriminator_horse = 'checkpoints/horse/experiment1/29_net_D.pth'
 
     # =============================================================================================
     # horse real|fake discriminator
     # =============================================================================================
+    """
+    1. 创建options; 
+    2. 创建training dataset, training dataloader; 
+    3. 创建clf_train_dataset, clf_train_dataloader, clf_test_dataset, clf_test_dataloader;
+    4. 创建model, load model from opt.previous_model if any;
+    5. Train.        
+        5.1. save loss_log.txt 于 join(checkpoints_dir, name)    
+             <visualizer.print_current_losses, visualizer.print_avg_loss>
+        5.2. save 'test_loss.txt' % epoch 于 join(test_results_dir, name)
+             <visualizer.print_test_result>        
+    """
+    # 1. 创建options;
 
     opt = Option()
     option_dict = {
@@ -48,11 +71,12 @@ if __name__ == '__main__':
         # BaseModel.__init__()
         'gpu_ids': [0],
         'checkpoints_dir': './checkpoints/horse',
+        'test_results_dir': './test_results/horse',
         'name': 'experiment2',
         'preprocess': None,
         # model.setup()
         'continue_train': False, # 虽然这里写的是False, 但是实际上则是 load net from previous_model
-        'previous_model': None,
+        'previous_model': path_discriminator_horse,
         'load_iter': 0,
         'epoch': 'latest',
         'verbose': True,
@@ -86,31 +110,48 @@ if __name__ == '__main__':
     for key in option_dict.keys():
         setattr(opt, key, option_dict[key])
 
-    log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
+    loss_log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
+    result_log_name = os.path.join(opt.test_results_dir, opt.name, 'test_loss.txt')
 
-    dataset = horseDataset(real_dir=path_real_horse, fake_dir=path_fake_horse)
-    dataset_size = len(dataset)
+    # 2. 创建training dataset, training dataloader;
+    train_dataset = horseDataset(real_dir=path_train_real_horse, fake_dir=path_train_fake_horse)
+    dataset_size = len(train_dataset)
 
     data_message = DATA_MESSAGE_TEMPLATE.format( \
-                    dataset.real_dir, len(dataset.real_img_list), \
-                    dataset.fake_dir, len(dataset.fake_img_list))
+                    train_dataset.real_dir, len(train_dataset.real_img_list), \
+                    train_dataset.fake_dir, len(train_dataset.fake_img_list), \
+                    dataset_size)
     print(data_message)
-    print('The number of training images = %d' % dataset_size)
+    with open(loss_log_name, 'a') as log_file:
+        log_file.write(data_message)
 
-    dataloader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=0)
+    train_dataloader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=0)
 
+    # 3. 创建 clf_train_dataloader, clf_test_dataset, clf_test_dataloader;
+    clf_train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=0)
+
+    clf_test_dataset = horseDataset(real_dir=path_test_real_horse, fake_dir=path_test_fake_horse)
+    dataset_size = len(clf_test_dataset)
+    data_message = DATA_MESSAGE_TEMPLATE.format( \
+                    clf_test_dataset.real_dir, len(clf_test_dataset.real_img_list),
+                    clf_test_dataset.fake_dir, len(clf_test_dataset.fake_img_list))
+    print(data_message)
+    print('The number of testing images = %d' % dataset_size)
+    clf_test_dataloader = DataLoader(clf_test_dataset, batch_size=1, shuffle=True, num_workers=0)
+
+    # 4. 创建model, load model from opt.previous_model if any;
     model = DiscriminateModel(opt)
-    net_message = NET_MESSAGE_TEMPLATE.format(model.device)
-    print(net_message)
     model.setup(opt) # Load and print networks; create schedulers.
-    path_discriminator_horse = 'checkpoints/horse/experiment1/29_net_D.pth'
-    model.load_net(path_discriminator_horse)
+    model.load_net(opt.previous_model)
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
 
-    with open(log_name, 'a') as log_file:
+    net_message = NET_MESSAGE_TEMPLATE.format(model.device, opt.previous_model)
+    print(net_message)
+    with open(loss_log_name, 'a') as log_file:
         log_file.write(data_message)
         log_file.write(net_message)
 
+    # 5. Train.
     total_iters = 0                # the total number of training iterations
     for epoch in range(opt.epochs):
         running_loss = 0.0
@@ -118,7 +159,8 @@ if __name__ == '__main__':
         iter_data_time = time.time()
         epoch_iter = 0
         epoch_loss = []
-        for i, data in enumerate(dataloader):
+
+        for i, data in enumerate(train_dataloader):
             iter_start_time = time.time()
             if total_iters % opt.print_freq == 0:
                 t_data = iter_start_time - iter_data_time
@@ -138,9 +180,56 @@ if __name__ == '__main__':
         print('saving the model at the end of epoch %d as state_dict' % (epoch))
         model.save_networks(epoch)
 
+        # 5.1. save loss_log.txt 于 join(checkpoints_dir, name)
+        # <visualizer.print_current_losses, visualizer.print_avg_loss>
         visualizer.print_avg_loss(epoch, epoch_loss)
         print('End of epoch %d / %d \t Time Taken: %d sec' % (
         epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
+
+        # 5.2. save 'test_loss.txt' % epoch 于 join(test_dir, name)
+        #      <visualizer.print_test_result>
+        with open(result_log_name, "a") as test_loss_log_file:
+            test_loss_log_file.write('---------- {:} Period Result -------------\n'.format(epoch))
+        TN = 0
+        TP = 0
+        FN = 0
+        FP = 0
+        for i, data in enumerate(clf_train_dataloader):
+            model.set_input(data)
+            model.forward()
+            prediction = model.features.mean()
+            if model.label == 1:
+                if prediction > 0.5:
+                    TP += 1
+                else:
+                    FN += 1
+            elif model.label == 0:
+                if prediction > 0.5:
+                    FP += 1
+                else:
+                    TN += 1
+        visualizer.print_test_result('Training', epoch, TP, TN, FP, FN)
+
+        TN = 0
+        TP = 0
+        FN = 0
+        FP = 0
+        for i, data in enumerate(clf_test_dataloader):
+            model.set_input(data)
+            model.forward()
+            prediction = model.features.mean()
+            if model.label == 1:
+                if prediction > 0.5:
+                    TP += 1
+                else:
+                    FN += 1
+            elif model.label == 0:
+                if prediction > 0.5:
+                    FP += 1
+                else:
+                    TN += 1
+        visualizer.print_test_result('Testing', epoch, TP, TN, FP, FN)
+
 
 
     # =============================================================================================
