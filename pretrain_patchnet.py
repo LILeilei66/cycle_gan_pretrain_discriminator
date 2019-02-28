@@ -24,7 +24,7 @@ DATA_MESSAGE_TEMPLATE = \
 "---------- Dataset initialized -------------\n \
 at {:}, file list length: {:}\n \
 at {:}, file list length: {:}\n \n \
-The number of training images = {:}"
+The number of training images = {:}\n"
 
 NET_MESSAGE_TEMPLATE = \
 "---------- Networks initialized -------------\n \
@@ -42,9 +42,13 @@ if __name__ == '__main__':
     #    当前: 利用 pretrained discriminator 进行 <real|fake> 分类.
     #    改动: 利用两个pretrained discriminator, 传入同一 item, 比较更接近 <horse|zebra> 中哪个.
     #    结果: 全部都会认为是zebra. (TP: 0 ; TN: 69 ; FP: 0 ; FP: 56)
-    # 1.1 改变criterion (改动亦少):
+    # 1.1 改变 criterion (改动亦少):
     #     当前: MSELoss (default method).
-    #     改动: CrossEntropyLoss() (ZY's criterion) TODO
+    #     改动: CrossEntropyLoss() (ZY's criterion)
+    #     缺点: mean value 是我计算 zebra|horse 的基础, 如果改动的话, 结果就没有意义了.
+    # 1.2 改变 optimizer (改动亦少): TODO
+    #     当前: Adam (default method).
+    #     改动: optim.RMSprop() (之前训练 ft_vis 时的 optimizer)
     # --------------------------------------------------------------------------------------
     # 2. 改变 Discriminator 结构 (训练时间与收敛性有保证):
     #    当前: 70*70 PatchNet, 参见 'models/structure_discriminator.md'.
@@ -64,7 +68,7 @@ if __name__ == '__main__':
     path_test_real_zebra = './dataset/zebra/test/real'
     path_test_fake_zebra = './dataset/zebra/test/fake'
 
-    path_discriminator_horse = 'checkpoints/horse/experiment1/29_net_D.pth'
+    path_discriminator_horse = 'checkpoints/horse/experiment2/10_net_D.pth'
 
     # =============================================================================================
     # horse real|fake discriminator
@@ -89,7 +93,7 @@ if __name__ == '__main__':
         'gpu_ids': [0],
         'checkpoints_dir': './checkpoints/horse',
         'test_results_dir': './test_results/horse',
-        'name': 'experiment2',
+        'name': 'experiment3',
         'preprocess': None,
         # model.setup()
         'continue_train': False, # 虽然这里写的是False, 但是实际上则是 load net from previous_model
@@ -106,7 +110,7 @@ if __name__ == '__main__':
         'norm': 'instance',
         'init_type': 'normal',
         'init_gain': 0.02,
-        'gan_mode': 'lsgan',
+        'gan_mode': 'centropy',
         'display_id': -1,
         'no_html': True,
         'display_winsize': 256,
@@ -151,7 +155,8 @@ if __name__ == '__main__':
     dataset_size = len(clf_test_dataset)
     data_message = DATA_MESSAGE_TEMPLATE.format( \
                     clf_test_dataset.real_dir, len(clf_test_dataset.real_img_list),
-                    clf_test_dataset.fake_dir, len(clf_test_dataset.fake_img_list))
+                    clf_test_dataset.fake_dir, len(clf_test_dataset.fake_img_list),
+                    dataset_size)
     print(data_message)
     print('The number of testing images = %d' % dataset_size)
     clf_test_dataloader = DataLoader(clf_test_dataset, batch_size=1, shuffle=True, num_workers=0)
