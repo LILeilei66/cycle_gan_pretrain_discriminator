@@ -34,17 +34,129 @@ Precision = {:} \n \
 "
 
 if __name__ == '__main__':
-    path_real_horse = './dataset/horse/real'
-    path_real_zebra = './dataset/zebra/real'
-    path_fake_horse = './dataset/horse/fake'
-    path_fake_zebra = './dataset/zebra/fake'
+    path_train_real_horse = './dataset/horse/train/real'
+    path_train_fake_horse = './dataset/horse/train/fake'
+    path_test_real_horse =  './dataset/horse/test/real'
+    path_test_fake_horse =  './dataset/horse/test/fake'
 
-    pth_numerate_horse = 29
-    path_discriminator_horse = './checkpoints/horse/experiment1/%d_net_D.pth' % pth_numerate_horse
+    path_train_real_zebra = './dataset/zebra/train/real'
+    path_train_fake_zebra = './dataset/zebra/train/fake'
+    path_test_real_zebra = './dataset/zebra/test/real'
+    path_test_fake_zebra = './dataset/zebra/test/fake'
+
+    pth_numerate_horse = 10
+    path_discriminator_horse = './checkpoints/horse/experiment2/%d_net_D.pth' % pth_numerate_horse
     # Average loss at 20 th epoch is 0.253
-    pth_numerate_zebra = 12
+    pth_numerate_zebra = 29
     path_discriminator_zebra = './checkpoints/zebra/experiment1/%d_net_D.pth' % pth_numerate_zebra
     # Average loss at 12 th epoch is 0.253
+
+    # =============================================================================================
+    # Test horse|zebra discriminator
+    # =============================================================================================
+    """
+    1. Create horse_discriminator, load from path_discriminator_horse;
+    2. Create zebra_discriminator, load from path_discriminator_zebra;
+    3. Create dataset, dataloader
+    4. Start classification.
+    """
+    print('=====Test horse|zebra discriminator=========')
+    # 0. Model Options, log_path:
+    option_dict = {
+        'isTrain': False,
+        # BaseModel.__init__()
+        'gpu_ids': [0],
+        'test_results_dir': './test_results/horse',
+        'checkpoints_dir': './test_results/horse',
+        'name': 'experiment3',
+        'preprocess': None,
+        # model.setup()
+        'continue_train': False,
+        'load_iter': 0,
+        'epoch': 'latest',
+        'verbose': True,
+        # DiscriminateModel.__init__()
+        'model_suffix': '',
+        'output_nc': 3,
+        'ndf': 64,
+        'netD': 'basic',
+        'n_layers_D': 3,
+        'norm': 'instance',
+        'init_type': 'normal',
+        'init_gain': 0.02,
+        'gan_mode': 'lsgan',
+        'display_id': -1,
+        'no_html': True,
+        'display_winsize': 256,
+        'display_port': 8097,
+        # Train
+        'lr': 0.002,  # train_option 中 Adam_Optimizer 的初始 learning rate, Adam 中的 default 值为 1e-3.
+        'beta1': 0.5,  # train_option 中 Adam_Optimizer 的 momentum, Adam 中的 default 值为 0.9.
+        'epochs': 30,
+        # else
+        'batch_size': 256,
+        'niter': 100,
+        'niter_decay': 100,
+        'lr_policy': 'linear',
+        'epoch_count': 1
+        }
+    opt = Option()
+    for key in option_dict.keys():
+        setattr(opt, key, option_dict[key])
+
+    # 1. Create horse_discriminator, load from path_discriminator_horse;
+    horse_model = DiscriminateModel(opt)
+    horse_model.load_net(path_discriminator_horse)
+    zebra_model = DiscriminateModel(opt)
+    zebra_model.load_net(path_discriminator_zebra)
+
+    print(NET_MESSAGE_TEMPLATE.format(path_discriminator_horse))
+    print(NET_MESSAGE_TEMPLATE.format(path_discriminator_zebra))
+
+    # 3. Create dataset, dataloader
+    horse_dataset = horseDataset(path_test_real_horse, None)
+    zebra_dataset = horseDataset(path_test_real_zebra, None)
+    horse_dataloader = DataLoader(horse_dataset, batch_size=1, shuffle=False)
+    zebra_dataloader = DataLoader(zebra_dataset, batch_size=1, shuffle=False)
+
+    # 4. Start classification.
+    # 标记 horse 为 positive, zebra 为 negative.
+    TP = 0
+    TN = 0
+    FP = 0
+    FN = 0
+
+
+    for i, data in enumerate(horse_dataloader):
+        horse_model.set_input(data)
+        horse_model.forward()
+        horse_prediction = horse_model.features.detach().mean()
+
+        zebra_model.set_input(data)
+        zebra_model.forward()
+        zebra_prediction = zebra_model.features.detach().mean()
+
+        if horse_prediction > zebra_prediction:
+            TP += 1
+        else:
+            FN += 1
+
+    for i, data in enumerate(zebra_dataloader):
+        horse_model.set_input(data)
+        horse_model.forward()
+        horse_prediction = horse_model.features.detach().mean()
+
+        zebra_model.set_input(data)
+        zebra_model.forward()
+        zebra_prediction = zebra_model.features.detach().mean()
+
+        if zebra_prediction > horse_prediction:
+            TN += 1
+        else:
+            FP += 1
+
+    print('TP: {:} ; TN: {:} ; FP: {:} ; FN: {:}'.format(TP, TN, FP, FN))
+
 
 
     # =============================================================================================
@@ -56,6 +168,7 @@ if __name__ == '__main__':
     3. Create and load models;
     4. Test; 
     5. Save results.
+    """
     """
     print('=====Test horse real|fake discriminator=========')
     # 1. Create options;
@@ -132,14 +245,14 @@ if __name__ == '__main__':
     net_message = NET_MESSAGE_TEMPLATE.format(path_discriminator_horse)
     with open(log_path, 'a') as log_file:
         log_file.write(net_message)
-
-    # 4. Test;
-    """
-    1) 传入 1 batch 的 image; 
-    2) Compare NET result with labels.
     
-    当进行训练的时候, 是让最后的结果往 <0|1> 靠近的，所以直接拿 features.mean() 与 0.5 比较, 作为一个比较简单的
-    """
+    # 4. Test;
+    
+    # 1) 传入 1 batch 的 image; 
+    # 2) Compare NET result with labels.
+    # 
+    # 当进行训练的时候, 是让最后的结果往 <0|1> 靠近的，所以直接拿 features.mean() 与 0.5 比较, 作为一个比较简单的
+    
 
 
     for i, data in enumerate(dataloader):
@@ -167,6 +280,6 @@ if __name__ == '__main__':
     with open(log_path, 'a') as log_file:
         log_file.write(clf_message)
 
-
+    """
 
 

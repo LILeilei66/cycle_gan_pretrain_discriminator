@@ -35,7 +35,24 @@ SAVE_MESSAGE_TEMPLATE = \
 "Model save path : {:}\n"
 
 if __name__ == '__main__':
-    # TODO: 虽然loss在LossGAN在减小, 但是对于<Real|Fake>的分类效果完全没有变好。
+    # TODO: 虽然 loss 于 LossGAN在减小, 但是对于<Real|Fake>的分类效果完全没有变好。
+    # TODO: 三个解决方法：
+
+    # 1. 改变 TPFN 计算方法 (最少改动)：
+    #    当前: 利用 pretrained discriminator 进行 <real|fake> 分类.
+    #    改动: 利用两个pretrained discriminator, 传入同一 item, 比较更接近 <horse|zebra> 中哪个.
+    #    结果: 全部都会认为是zebra. (TP: 0 ; TN: 69 ; FP: 0 ; FP: 56)
+    # 1.1 改变criterion (改动亦少):
+    #     当前: MSELoss (default method).
+    #     改动: CrossEntropyLoss() (ZY's criterion) TODO
+    # --------------------------------------------------------------------------------------
+    # 2. 改变 Discriminator 结构 (训练时间与收敛性有保证):
+    #    当前: 70*70 PatchNet, 参见 'models/structure_discriminator.md'.
+    #    改动: 寻找网上是否有pretrained discriminator, 比如 progressively growing gans.
+    # --------------------------------------------------------------------------------------
+    # 3. 改变 Loss 计算方法 (分类效果一定会变好):
+    #    当前: feature([1, 30, 30]) 与 label.expanded() 的 MSELoss (论文中使用的LossGAN).
+    #    改动: 增加一层, 使得new_feature([1]) 与label 进行 MSELoss.
 
     path_train_real_horse = './dataset/horse/train/real'
     path_train_fake_horse = './dataset/horse/train/fake'

@@ -1,0 +1,89 @@
+---------- 0 Period Result -------------
+ Training : 
+ TP = 0 ; TN = 1405 ; FP = 0 ; FN = 1131 
+ Accuracy = 0.5540220820189274 ; Recall = Nan ; Precision = Nan 
+ ---------- 0 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ ---------- 1 Period Result -------------
+ Training : 
+ TP = 1131 ; TN = 0 ; FP = 1405 ; FN = 0 
+ Accuracy = 0.44597791798107256 ; Recall = Nan ; Precision = Nan 
+ ---------- 1 Period Result -------------
+ Testing : 
+ TP = 56 ; TN = 0 ; FP = 69 ; FN = 0 
+ Accuracy = 0.448 ; Recall = Nan ; Precision = Nan 
+ ---------- 2 Period Result -------------
+ Training : 
+ TP = 0 ; TN = 1405 ; FP = 0 ; FN = 1131 
+ Accuracy = 0.5540220820189274 ; Recall = Nan ; Precision = Nan 
+ ---------- 2 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ ---------- 3 Period Result -------------
+ Training : 
+ TP = 0 ; TN = 1405 ; FP = 0 ; FN = 1131 
+ Accuracy = 0.5540220820189274 ; Recall = Nan ; Precision = Nan 
+ ---------- 3 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ ---------- 4 Period Result -------------
+ Training : 
+ TP = 4 ; TN = 1404 ; FP = 1 ; FN = 1127 
+ Accuracy = 0.555205047318612 ; Recall = 0.8 ; Precision = 0.0035366931918656055 
+ ---------- 4 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ ---------- 5 Period Result -------------
+ Training : 
+ TP = 0 ; TN = 1405 ; FP = 0 ; FN = 1131 
+ Accuracy = 0.5540220820189274 ; Recall = Nan ; Precision = Nan 
+ ---------- 5 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ ---------- 6 Period Result -------------
+ Training : 
+ TP = 0 ; TN = 1405 ; FP = 0 ; FN = 1131 
+ Accuracy = 0.5540220820189274 ; Recall = Nan ; Precision = Nan 
+ ---------- 6 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ ---------- 7 Period Result -------------
+ Training : 
+ TP = 40 ; TN = 1359 ; FP = 46 ; FN = 1091 
+ Accuracy = 0.5516561514195584 ; Recall = 0.46511627906976744 ; Precision = 0.03536693191865606 
+ ---------- 7 Period Result -------------
+ Testing : 
+ TP = 2 ; TN = 67 ; FP = 2 ; FN = 54 
+ Accuracy = 0.552 ; Recall = 0.5 ; Precision = 0.03571428571428571 
+ ---------- 8 Period Result -------------
+ Training : 
+ TP = 0 ; TN = 1405 ; FP = 0 ; FN = 1131 
+ Accuracy = 0.5540220820189274 ; Recall = Nan ; Precision = Nan 
+ ---------- 8 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ ---------- 9 Period Result -------------
+ Training : 
+ TP = 573 ; TN = 652 ; FP = 753 ; FN = 558 
+ Accuracy = 0.4830441640378549 ; Recall = 0.4321266968325792 ; Precision = 0.506631299734748 
+ ---------- 9 Period Result -------------
+ Testing : 
+ TP = 26 ; TN = 24 ; FP = 45 ; FN = 30 
+ Accuracy = 0.4 ; Recall = 0.36619718309859156 ; Precision = 0.4642857142857143 
+ ---------- 10 Period Result -------------
+ Training : 
+ TP = 0 ; TN = 1405 ; FP = 0 ; FN = 1131 
+ Accuracy = 0.5540220820189274 ; Recall = Nan ; Precision = Nan 
+ ---------- 10 Period Result -------------
+ Testing : 
+ TP = 0 ; TN = 69 ; FP = 0 ; FN = 56 
+ Accuracy = 0.552 ; Recall = Nan ; Precision = Nan 
+ 
