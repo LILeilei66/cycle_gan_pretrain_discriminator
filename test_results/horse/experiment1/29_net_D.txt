@@ -1,0 +1,20 @@
+================ Test Result (Thu Feb 28 10:18:56 2019) ================
+---------- Dataset initialized -------------
+---------- Dataset initialized -------------
+ at ./dataset/horse/real, file list length: 1187
+ at ./dataset/zebra/real, file list length: 1474
+The number of training images = 2661
+================ Test Result (Thu Feb 28 10:19:26 2019) ================
+---------- Dataset initialized -------------
+---------- Dataset initialized -------------
+ at ./dataset/horse/real, file list length: 1187
+ at ./dataset/zebra/real, file list length: 1474
+The number of training images = 2661
+---------- Networks initialized -------------
+ Load network from ./checkpoints/horse/experiment1/29_net_D.pth
+---------- Classification result -------------
+ TP = 815 ; TN = 438 ; FP = 1036 ; FN = 372 
+ Accuracy = 0.47087561067267947 
+ Recall = 0.4403025391680173 
+ Precision = 0.6866048862679023 
+ 

@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # =============================================================================================
     # horse real|fake discriminator
     # =============================================================================================
-    """
+
     opt = Option()
     option_dict = {
         'isTrain': True,
@@ -51,7 +51,8 @@ if __name__ == '__main__':
         'name': 'experiment2',
         'preprocess': None,
         # model.setup()
-        'continue_train': False,
+        'continue_train': False, # 虽然这里写的是False, 但是实际上则是 load net from previous_model
+        'previous_model': None,
         'load_iter': 0,
         'epoch': 'latest',
         'verbose': True,
@@ -102,6 +103,8 @@ if __name__ == '__main__':
     net_message = NET_MESSAGE_TEMPLATE.format(model.device)
     print(net_message)
     model.setup(opt) # Load and print networks; create schedulers.
+    path_discriminator_horse = 'checkpoints/horse/experiment1/29_net_D.pth'
+    model.load_net(path_discriminator_horse)
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
 
     with open(log_name, 'a') as log_file:
@@ -139,11 +142,11 @@ if __name__ == '__main__':
         print('End of epoch %d / %d \t Time Taken: %d sec' % (
         epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
-    """
+
     # =============================================================================================
     # zebra real|fake discriminator
     # =============================================================================================
-
+    """
     opt = Option()
     option_dict = {
         'isTrain': True,
@@ -244,3 +247,4 @@ if __name__ == '__main__':
         visualizer.print_avg_loss(epoch, epoch_loss)
         print('End of epoch %d / %d \t Time Taken: %d sec' % (
         epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
+    """

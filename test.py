@@ -8,6 +8,7 @@ from models.discriminate_model import DiscriminateModel
 from torch.utils.data import DataLoader
 from torch import unsqueeze as tunsqueeze
 import os
+import time
 
 class Option():
     pass
@@ -19,10 +20,18 @@ at {:}, file list length: {:}\n"
 
 NET_MESSAGE_TEMPLATE = \
 "---------- Networks initialized -------------\n \
-Model located at : {:}\n"
+Load network from {:}\n"
 
 SAVE_MESSAGE_TEMPLATE = \
 "Log save path : {:}\n"
+
+CLF_MESSAGE_TEMPLATE = \
+"---------- Classification result -------------\n \
+TP = {:} ; TN = {:} ; FP = {:} ; FN = {:} \n \
+Accuracy = {:} \n \
+Recall = {:} \n \
+Precision = {:} \n \
+"
 
 if __name__ == '__main__':
     path_real_horse = './dataset/horse/real'
@@ -30,9 +39,12 @@ if __name__ == '__main__':
     path_fake_horse = './dataset/horse/fake'
     path_fake_zebra = './dataset/zebra/fake'
 
-    path_discriminator_horse = './checkpoints/horse/experiment2/20_net_D.pth' # Average loss at 20 th epoch is 0.253
-
-    path_discriminator_zebra = './checkpoints/zebra/experiment1/12_net_D.pth' # Average loss at 12 th epoch is 0.253
+    pth_numerate_horse = 29
+    path_discriminator_horse = './checkpoints/horse/experiment1/%d_net_D.pth' % pth_numerate_horse
+    # Average loss at 20 th epoch is 0.253
+    pth_numerate_zebra = 12
+    path_discriminator_zebra = './checkpoints/zebra/experiment1/%d_net_D.pth' % pth_numerate_zebra
+    # Average loss at 12 th epoch is 0.253
 
 
     # =============================================================================================
@@ -51,6 +63,7 @@ if __name__ == '__main__':
         'isTrain': False,
         # BaseModel.__init__()
         'gpu_ids': [0],
+        'test_results_dir': './test_results/horse',
         'checkpoints_dir': './test_results/horse',
         'name': 'experiment1',
         'preprocess': None,
@@ -80,7 +93,7 @@ if __name__ == '__main__':
         'beta1': 0.5, # train_option 中 Adam_Optimizer 的 momentum, Adam 中的 default 值为 0.9.
         'epochs': 30,
         # else
-        'batch_size': 128,
+        'batch_size': 1, # 在测试中，使用batch_size 为 1
         'niter': 100,
         'niter_decay': 100,
         'lr_policy': 'linear',
@@ -90,6 +103,12 @@ if __name__ == '__main__':
     opt = Option()
     for key in option_dict.keys():
         setattr(opt, key, option_dict[key])
+
+    log_path = os.path.join(opt.test_results_dir, opt.name, '%d_net_D.txt' % pth_numerate_horse)
+    assert os.path.isfile(log_path)
+    with open(log_path, 'a') as log_file:
+        now = time.strftime('%c')
+        log_file.write('================ Test Result (%s) ================\n' % now)
 
     # 2. Generate data;
     dataset = horseDataset(path_real_horse, path_real_zebra)
@@ -102,40 +121,54 @@ if __name__ == '__main__':
                     dataset.fake_dir, len(dataset.fake_img_list))
     print(data_message)
     print('The number of training images = %d' % dataset_size)
+    with open(log_path, 'a') as log_file:
+        log_file.write(data_message)
+        log_file.write('The number of training images = %d\n' % dataset_size)
 
     # 3. Create and load models;
     model = DiscriminateModel(opt)
     model.load_net(path_discriminator_horse)
     model.print_networks(opt.verbose)
+    net_message = NET_MESSAGE_TEMPLATE.format(path_discriminator_horse)
+    with open(log_path, 'a') as log_file:
+        log_file.write(net_message)
 
     # 4. Test;
-    # TODO
     """
     1) 传入 1 batch 的 image; 
     2) Compare NET result with labels.
     
     当进行训练的时候, 是让最后的结果往 <0|1> 靠近的，所以直接拿 features.mean() 与 0.5 比较, 作为一个比较简单的
     """
+    TN = 0
+    TP = 0
+    FN = 0
+    FP = 0
 
-    sample_real = dataset.__getitem__(0)
-    sample_real['image'] = tunsqueeze(sample_real['image'], 0) # 为 img 增加一个维度, 当前 shape 为 [1,3,256,256]
-    label = sample_real['label']
+    for i, data in enumerate(dataloader):
+        model.set_input(data)
+        model.forward()
+        prediction = model.features.mean()
+        if model.label == 1:
+            if prediction > 0.5:
+                TP += 1
+            else:
+                FN += 1
+        elif model.label == 0:
+            if prediction > 0.5:
+                FP += 1
+            else:
+                TN += 1
+    # print(TP, FN, TN, FP)
 
-    model.set_input(sample_real)
-    model.forward()
-    print(model.features.shape)
-    print(model.features.mean())
+    P = TP / (TP + FP) # Precision 查准率
+    R = TP / (TP + FN) # Recall 查全率
+    Acc = (TP + TN) / (TP + TN + FP + FN)
 
-    sample_fake = dataset.__getitem__(0)
-    sample_real['image'] = tunsqueeze(sample_real['image'], 0) # 为 img 增加一个维度, 当前 shape 为 [1,3,256,256]
-    label = sample_real['label']
-
-    model.set_input(sample_real)
-    model.forward()
-    print(model.features.shape)
-    print(model.features.mean())
-
-
+    clf_message = CLF_MESSAGE_TEMPLATE.format(TP, TN, FP, FN, Acc, P,R)
+    print(clf_message)
+    with open(log_path, 'a') as log_file:
+        log_file.write(clf_message)
 
 
 
