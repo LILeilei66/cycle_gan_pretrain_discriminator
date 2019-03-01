@@ -45,8 +45,10 @@ class DiscriminateModel(BaseModel):
         setattr(self, 'netD' + opt.model_suffix, self.netD)  # store netD in self.
 
 
-        self.optimizer_D = optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1,
-        0.999))
+        if opt.optim_type == 'Adam':
+            self.optimizer_D = optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+        elif opt.optim_type == 'RMSprop':
+            self.optimizer_D = optim.RMSprop(self.netD.parameters())
         self.optimizers.append(self.optimizer_D)
         self.criterion_D = networks.DiscriminatorLoss(opt.gan_mode).to(self.device)
 
@@ -128,7 +130,7 @@ class DiscriminateModel(BaseModel):
 
     def optimize_parameters(self):
         """Calculate loss functions, get gradients, update network weights."""
-        # self.forward()      # 得到预测结果
+        self.forward()      # 得到预测结果
         self.set_requires_grad(self.netD, True) # 将待优化的 netD 设为 requires_grad
         self.optimizer_D.zero_grad() # 初始化 netD 的 grad
         self.backward_D() # 计算 loss 和 grad

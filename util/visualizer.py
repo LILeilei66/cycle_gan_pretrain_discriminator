@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 from scipy.misc import imresize
 
 CLF_MESSAGE_TEMPLATE = \
-"{:} : \n \
+"{:} {:} : \n \
 TP = {:} ; TN = {:} ; FP = {:} ; FN = {:} \n \
 Accuracy = {:} ; Recall = {:} ; Precision = {:} \n "
 
@@ -98,7 +98,7 @@ class Visualizer():
         self.test_loss_name = os.path.join(opt.test_results_dir, opt.name, 'test_loss.txt')
         with open(self.test_loss_name, "a") as test_loss_log:
             now = time.strftime("%c")
-            log_file.write('================ Testing Loss (%s) ================\n' % now)
+            test_loss_log.write('================ Testing Loss (%s) ================\n' % now)
 
     def reset(self):
         """Reset the self.saved status"""

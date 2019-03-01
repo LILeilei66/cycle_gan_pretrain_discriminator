@@ -1,0 +1,9 @@
+experiment1:
+ ---------- 29 Period Result -------------
+29 Training :
+ TP = 1405 ; TN = 1131 ; FP = 0 ; FN = 0
+ Accuracy = 1.0 ; Recall = Nan ; Precision = Nan
+ 29 Testing :
+ TP = 69 ; TN = 55 ; FP = 1 ; FN = 0
+ Accuracy = 0.992 ; Recall = Nan ; Precision = Nan
+ Accuracy = 0.968 ; Recall = 0.9814814814814815 ; Precision = 0.9464285714285714

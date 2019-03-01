@@ -290,6 +290,8 @@ class DiscriminatorLoss(nn.Module):
         self.gan_mode = gan_mode
         if gan_mode == 'lsgan':
             self.loss = nn.MSELoss()
+        elif gan_mode == 'centropy':
+            self.loss = nn.CrossEntropyLoss()
         elif gan_mode == 'vanilla':
             self.loss = nn.BCEWithLogitsLoss()
         elif gan_mode in ['wgangp']:
@@ -326,7 +328,7 @@ class DiscriminatorLoss(nn.Module):
             the calculated loss.
         """
 
-        if self.gan_mode in ['lsgan', 'vanilla']:
+        if self.gan_mode in ['lsgan', 'vanilla', 'centropy']:
             target_tensor = self.get_target_tensor(prediction, target_is_real)
 
             loss = self.loss(prediction, target_tensor)
