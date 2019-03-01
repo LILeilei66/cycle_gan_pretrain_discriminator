@@ -37,8 +37,6 @@ SAVE_MESSAGE_TEMPLATE = \
 # TODO: 为什么 load 的 net, 出来的第一个loss 会这么大？
 
 if __name__ == '__main__':
-    # TODO: 虽然 loss 于 LossGAN在减小, 但是对于<Real|Fake>的分类效果完全没有变好。
-    # TODO: 三个解决方法：
 
     # 1. 改变 TPFN 计算方法 (最少改动)：
     #    当前: 利用 pretrained discriminator 进行 <real|fake> 分类.
@@ -46,7 +44,7 @@ if __name__ == '__main__':
     #    结果: 全部都会认为是zebra. (TP: 0 ; TN: 69 ; FP: 0 ; FP: 56)
     # 1.1 改变 criterion (改动亦少):
     #     当前: MSELoss (default method).
-    #     改动: CrossEntropyLoss() (ZY's criterion) todo
+    #     改动: CrossEntropyLoss() (ZY's criterion) (未使用)
     #     缺点: mean value 是我计算 zebra|horse 的基础, 如果改动的话, 结果就没有意义了.
     # 1.2 改变 optimizer (改动亦少):
     #     当前: Adam (default method).

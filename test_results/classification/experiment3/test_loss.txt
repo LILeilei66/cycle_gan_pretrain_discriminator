@@ -1,0 +1,10 @@
+若 horse_model 与 zebra_model 得到的features, 一个大于0.5, 则取较大者作为prediction;
+若 不存在如上关系, 存于 confused.
+
+
+ ================ Testing Loss (Fri Mar  1 15:46:12 2019) ================
+ confuse : 0
+ -1 classification :
+ TP = 1004 ; TN = 806 ; FP = 325 ; FN = 401 
+ Accuracy = 0.7137223974763407 ; Recall = 0.7554552294958615 ; Precision = 0.7145907473309608 
+ 

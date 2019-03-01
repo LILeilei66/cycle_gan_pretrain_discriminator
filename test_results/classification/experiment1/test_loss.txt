@@ -1,0 +1,8 @@
+比较 horse_model 与 zebra_model 的 features.mean(), 取较大者认为是 horse 或是 zebra.
+
+
+ ================ Testing Loss (Fri Mar  1 15:51:05 2019) ================
+-1 classification : 
+ TP = 1004 ; TN = 806 ; FP = 325 ; FN = 401 
+ Accuracy = 0.7137223974763407 ; Recall = 0.7554552294958615 ; Precision = 0.7145907473309608 
+ 
